@@ -16,10 +16,8 @@ const app = express();
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(express.json());
-app.use(routes);
 
-const PORT = process.env.PORT || 3000;
-
+// Security Middleware
 if (!isProduction) {
   // enable cors only in development
   app.use(cors());
@@ -43,8 +41,14 @@ app.use(
   })
 );
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.use((_req, _res, next) => {
+  const err = new Error("The requested resource couldn't be found.");
+  err.title = "Resource Not Found";
+  err.errors = ["The requested resource couldn't be found."];
+  err.status = 404;
+  next(err);
 });
+
+app.use(routes);
 
 module.exports = app;
