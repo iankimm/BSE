@@ -16,10 +16,8 @@ const app = express();
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(express.json());
-app.use(routes);
 
-const PORT = process.env.PORT || 3000;
-
+// Security Middleware
 if (!isProduction) {
   // enable cors only in development
   app.use(cors());
@@ -43,8 +41,6 @@ app.use(
   })
 );
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.use(routes);
 
 module.exports = app;
