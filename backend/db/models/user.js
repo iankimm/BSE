@@ -1,40 +1,63 @@
-"use strict";
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    return queryInterface.createTable("Users", {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
+'use strict';
+const { Model, Validator } = require('sequelize');
+
+module.exports = (sequelize, DataTypes) => {
+  class User extends Model {
+    toSafeObject() {
+      const { id, username, email } = this; // context will be the User instance
+      return { id, username, email };
+    }
+    static associate(models) {
+      // define association here
+    }
+  };
+
+  User.init(
+    {
       username: {
-        type: Sequelize.STRING(30),
+        type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        validate: {
+          len: [4, 30],
+          isNotEmail(value) {
+            if (Validator.isEmail(value)) {
+              throw new Error("Cannot be an email.");
+            }
+          }
+        }
       },
       email: {
-        type: Sequelize.STRING(256),
+        type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        validate: {
+          len: [3, 256]
+        }
       },
       hashedPassword: {
-        type: Sequelize.STRING.BINARY,
-        allowNull: false
-      },
-      createdAt: {
+        type: DataTypes.STRING.BINARY,
         allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        validate: {
+          len: [60, 60]
+        }
       }
-    });
-  },
-  down: async (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("Users");
-  }
+    },
+    {
+      sequelize,
+      modelName: "User",
+      defaultScope: {
+        attributes: {
+          exclude: ["hashedPassword", "email", "createdAt", "updatedAt"]
+        }
+      },
+      scopes: {
+        currentUser: {
+          attributes: { exclude: ["hashedPassword"] }
+        },
+        loginUser: {
+          attributes: {}
+        }
+      }
+    }
+  );
+  return User;
 };
